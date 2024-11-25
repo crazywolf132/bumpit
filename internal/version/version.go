@@ -1,3 +1,5 @@
+// Package version provides version calculation and management functionality.
+// It handles semantic versioning operations based on commit history and version formats.
 package version
 
 import (
@@ -27,7 +29,7 @@ func (v *Version) Calculate(currentVersion string, isInitial bool, commits []str
 		}
 		return version, nil
 	}
-	
+
 	version, err := CalculateNextVersion(currentVersion, v.cfg, commits)
 	if err != nil {
 		return "", err
@@ -43,12 +45,12 @@ func (v *Version) IsValidVersion(version string) error {
 		parts := strings.Split(version, "/")
 		versionNumber = parts[len(parts)-1]
 	}
-	
+
 	// Check if version starts with 'v'
 	if !strings.HasPrefix(versionNumber, "v") {
 		return fmt.Errorf("version must start with 'v'")
 	}
-	
+
 	// Remove 'v' prefix for semver validation
 	_, err := semver.NewVersion(strings.TrimPrefix(versionNumber, "v"))
 	return err
@@ -129,7 +131,7 @@ func CalculateNextVersion(currentVersion string, cfg *config.Config, commits []s
 
 	// Remove 'v' prefix if it exists for semver parsing
 	versionNumber = strings.TrimPrefix(versionNumber, "v")
-	
+
 	v, err := semver.NewVersion(versionNumber)
 	if err != nil {
 		return "", fmt.Errorf("invalid version format: %v", err)
@@ -184,9 +186,10 @@ func ValidateVersion(version string) error {
 }
 
 // CompareVersions compares two version strings and returns:
-//   1 if v1 > v2
-//   -1 if v1 < v2
-//   0 if v1 == v2
+//
+//	1 if v1 > v2
+//	-1 if v1 < v2
+//	0 if v1 == v2
 func CompareVersions(v1, v2 string) (int, error) {
 	ver1, err := semver.NewVersion(v1)
 	if err != nil {

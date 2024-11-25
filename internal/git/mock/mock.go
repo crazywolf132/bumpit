@@ -1,3 +1,4 @@
+// Package mock provides mock implementations of git operations for testing.
 package mock
 
 import (
@@ -7,26 +8,26 @@ import (
 // Git is a mock implementation of the git.Interface
 type Git struct {
 	// Mock data
-	LastTag          string
-	LastTagExists    bool
-	LastTagError     error
-	CommitsSinceTag  []string
-	CommitsError     error
-	FirstCommit      string
-	FirstCommitError error
-	HasChangesResult bool
-	HasChangesError  error
-	CurrentBranch    string
-	BranchError      error
-	IsCleanResult    bool
-	IsCleanError     error
-	CreateTagError   error
-	PushTagError     error
-	LatestTag        string
-	LatestTagError   error
-	CurrentVersion   string
-	VersionError     error
-	LatestTagFunc    func(pattern string) (string, error)
+	LastTag                    string
+	LastTagExists              bool
+	LastTagError               error
+	CommitsSinceTag            []string
+	CommitsError               error
+	FirstCommit                string
+	FirstCommitError           error
+	HasChangesResult           bool
+	HasChangesError            error
+	CurrentBranch              string
+	BranchError                error
+	IsCleanResult              bool
+	IsCleanError               error
+	CreateTagError             error
+	PushTagError               error
+	LatestTag                  string
+	LatestTagError             error
+	CurrentVersion             string
+	VersionError               error
+	LatestTagFunc              func(pattern string) (string, error)
 	CommitsSinceTagForPathFunc func(tag string, path string) ([]string, error)
 }
 
@@ -40,15 +41,15 @@ func (g *Git) GetLastTag() (string, bool, error) {
 	return g.LastTag, g.LastTagExists, g.LastTagError
 }
 
-// GetCommitsSinceTag returns mock data for commits since tag
-func (g *Git) GetCommitsSinceTag(tag string) ([]string, error) {
+// GetCommitsSinceTag returns mocked commits since a tag.
+func (g *Git) GetCommitsSinceTag(_ string) ([]string, error) {
 	return g.CommitsSinceTag, g.CommitsError
 }
 
-// GetCommitsSinceTagForPath returns commits since tag for a specific path
-func (g *Git) GetCommitsSinceTagForPath(tag string, path string) ([]string, error) {
+// GetCommitsSinceTagForPath returns mocked commits since a tag for a specific path.
+func (g *Git) GetCommitsSinceTagForPath(_ string, path string) ([]string, error) {
 	if g.CommitsSinceTagForPathFunc != nil {
-		return g.CommitsSinceTagForPathFunc(tag, path)
+		return g.CommitsSinceTagForPathFunc("", path)
 	}
 	return []string{}, nil
 }
@@ -63,13 +64,13 @@ func (g *Git) HasChanges() (bool, error) {
 	return g.HasChangesResult, g.HasChangesError
 }
 
-// CreateTag returns mock data for tag creation
-func (g *Git) CreateTag(tag string, message string) error {
+// CreateTag creates a mocked tag.
+func (g *Git) CreateTag(_ string, _ string) error {
 	return g.CreateTagError
 }
 
 // PushTag returns mock data for tag pushing
-func (g *Git) PushTag(tag string) error {
+func (g *Git) PushTag(_ string) error {
 	return g.PushTagError
 }
 
@@ -83,10 +84,10 @@ func (g *Git) IsClean() (bool, error) {
 	return g.IsCleanResult, g.IsCleanError
 }
 
-// GetLatestTag returns mock data for the latest tag
-func (g *Git) GetLatestTag(pattern string) (string, error) {
+// GetLatestTag returns a mocked latest tag.
+func (g *Git) GetLatestTag(_ string) (string, error) {
 	if g.LatestTagFunc != nil {
-		return g.LatestTagFunc(pattern)
+		return g.LatestTagFunc("")
 	}
 	return g.LatestTag, g.LatestTagError
 }

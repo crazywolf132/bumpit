@@ -4,7 +4,7 @@ BUILD_TIME=$(shell date +%FT%T%z)
 LDFLAGS=-ldflags "-X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME}"
 MAIN_GO=./cmd/bumpit/main.go
 
-.PHONY: build clean test lint install uninstall
+.PHONY: build clean test lint fmt vet install uninstall
 
 default: build
 
@@ -21,11 +21,24 @@ clean:
 test:
 	go test ./... -v
 
-lint:
-	@if command -v golangci-lint >/dev/null; then \
-		golangci-lint run ./...; \
+fmt:
+	@echo "Running gofmt..."
+	@files=$$(gofmt -l .); if [ -n "$$files" ]; then \
+		echo "The following files need formatting:"; \
+		echo "$$files"; \
+		exit 1; \
+	fi
+
+vet:
+	@echo "Running go vet..."
+	@go vet ./...
+
+lint: fmt vet
+	@echo "Running revive..."
+	@if command -v revive >/dev/null; then \
+		revive -config revive.toml -formatter friendly ./...; \
 	else \
-		echo "golangci-lint is not installed. Run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest"; \
+		echo "revive is not installed. Run: go install github.com/mgechev/revive@latest"; \
 		exit 1; \
 	fi
 

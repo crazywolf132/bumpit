@@ -8,7 +8,7 @@ import (
 
 func newTestConfig() *config.Config {
 	return &config.Config{
-		VersionPrefix:  "v",
+		VersionPrefix: "v",
 		VersionFormat: "{major}.{minor}.{patch}",
 		CommitTypes: config.CommitTypes{
 			Major: []string{"BREAKING CHANGE"},
@@ -20,10 +20,10 @@ func newTestConfig() *config.Config {
 
 func TestCalculateInitialVersion(t *testing.T) {
 	tests := []struct {
-		name     string
-		commits  []string
-		want     string
-		wantErr  bool
+		name    string
+		commits []string
+		want    string
+		wantErr bool
 	}{
 		{
 			name:    "major change",
@@ -64,11 +64,11 @@ func TestCalculateInitialVersion(t *testing.T) {
 
 func TestCalculateNextVersion(t *testing.T) {
 	tests := []struct {
-		name     string
-		current  string
-		commits  []string
-		want     string
-		wantErr  bool
+		name    string
+		current string
+		commits []string
+		want    string
+		wantErr bool
 	}{
 		{
 			name:    "major bump",

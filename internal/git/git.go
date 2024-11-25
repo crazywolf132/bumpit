@@ -1,3 +1,5 @@
+// Package git provides git operations for version management.
+// It handles git commands like tag creation, commit retrieval, and repository status checks.
 package git
 
 import (

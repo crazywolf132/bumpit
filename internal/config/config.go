@@ -1,3 +1,5 @@
+// Package config provides configuration management for the bumpit tool.
+// It handles loading and validating configuration from various sources.
 package config
 
 import (
@@ -8,60 +10,53 @@ import (
 	"strings"
 )
 
+// Config represents the main configuration structure for bumpit.
 type Config struct {
-	VersionPrefix  string            `yaml:"version_prefix"`
-	VersionFormat  string            `yaml:"version_format"`
-	PreRelease     string            `yaml:"pre_release"`
-	BuildMetadata  string            `yaml:"build_metadata"`
-	DefaultCommand string            `yaml:"default_command"`
-	CommitTypes    CommitTypes       `yaml:"commit_types"`
-	Git           GitConfig         `yaml:"git"`
-	Output        OutputConfig      `yaml:"output"`
-	Paths         []PathConfig      `yaml:"paths"`
+	VersionPrefix  string       `yaml:"version_prefix"`
+	VersionFormat  string       `yaml:"version_format"`
+	PreRelease     string       `yaml:"pre_release"`
+	BuildMetadata  string       `yaml:"build_metadata"`
+	DefaultCommand string       `yaml:"default_command"`
+	CommitTypes    CommitTypes  `yaml:"commit_types"`
+	Git            GitConfig    `yaml:"git"`
+	Output         OutputConfig `yaml:"output"`
+	Paths          []PathConfig `yaml:"paths"`
 }
 
+// CommitTypes defines which commit message prefixes trigger different types of version bumps.
 type CommitTypes struct {
 	Major []string `yaml:"major"`
 	Minor []string `yaml:"minor"`
 	Patch []string `yaml:"patch"`
 }
 
+// GitConfig holds git-specific configuration options.
 type GitConfig struct {
 	TagPattern string `yaml:"tag_pattern"`
 	AutoPush   bool   `yaml:"auto_push"`
 }
 
+// OutputConfig defines output formatting options.
 type OutputConfig struct {
 	Debug bool `yaml:"debug"`
 	Color bool `yaml:"color"`
 }
 
+// PathConfig represents configuration for a specific path in the repository.
 type PathConfig struct {
-	Path           string            `yaml:"path"`
-	VersionPrefix  string            `yaml:"version_prefix"`
-	VersionFormat  string            `yaml:"version_format"`
-	PreRelease     string            `yaml:"pre_release"`
-	BuildMetadata  string            `yaml:"build_metadata"`
-	TagPattern     string            `yaml:"tag_pattern"`
-	DefaultCommand string            `yaml:"default_command"`
-	CommitTypes    CommitTypes       `yaml:"commit_types"`
+	Path           string      `yaml:"path"`
+	VersionPrefix  string      `yaml:"version_prefix"`
+	VersionFormat  string      `yaml:"version_format"`
+	PreRelease     string      `yaml:"pre_release"`
+	BuildMetadata  string      `yaml:"build_metadata"`
+	TagPattern     string      `yaml:"tag_pattern"`
+	DefaultCommand string      `yaml:"default_command"`
+	CommitTypes    CommitTypes `yaml:"commit_types"`
 }
 
-func validateVersionFormat(format string) error {
-	if format == "" {
-		return nil // Empty format will be replaced with default
-	}
-	if format == "x.y.z" {
-		return fmt.Errorf("invalid version format: must contain {major}, {minor}, and {patch}")
-	}
-	if !strings.Contains(format, "{major}") ||
-		!strings.Contains(format, "{minor}") ||
-		!strings.Contains(format, "{patch}") {
-		return fmt.Errorf("invalid version format: must contain {major}, {minor}, and {patch}")
-	}
-	return nil
-}
-
+// LoadConfig loads the configuration from various sources and validates it.
+// It first tries to load from the BUMPIT_CONFIG environment variable,
+// then from default locations, and finally applies default values.
 func LoadConfig() (*Config, error) {
 	v := viper.New()
 	v.SetConfigType("yaml")
@@ -262,4 +257,19 @@ func (c *Config) GetPathConfig(path string) PathConfig {
 	}
 
 	return bestMatch
+}
+
+func validateVersionFormat(format string) error {
+	if format == "" {
+		return nil // Empty format will be replaced with default
+	}
+	if format == "x.y.z" {
+		return fmt.Errorf("invalid version format: must contain {major}, {minor}, and {patch}")
+	}
+	if !strings.Contains(format, "{major}") ||
+		!strings.Contains(format, "{minor}") ||
+		!strings.Contains(format, "{patch}") {
+		return fmt.Errorf("invalid version format: must contain {major}, {minor}, and {patch}")
+	}
+	return nil
 }
