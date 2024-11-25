@@ -1,0 +1,23 @@
+# Example configuration for custom version formatting
+version_prefix: ""
+version_format: "v{major}.{minor}"  # Only use major and minor versions
+pre_release: "rc.${GITHUB_RUN_NUMBER}"  # Use GitHub run number for pre-release
+build_metadata: "${GITHUB_SHA}"  # Use commit SHA as build metadata
+
+commit_types:
+  major:
+    - "BREAKING CHANGE"
+    - "major"
+  minor:
+    - "feat"
+  patch:
+    - "fix"
+    - "perf"
+
+git:
+  tag_pattern: "v*"
+  auto_push: true
+
+output:
+  debug: true
+  color: true

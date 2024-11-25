@@ -1,0 +1,149 @@
+name: 'Bumpit Version Manager'
+description: 'Automatically calculate and bump semantic versions based on conventional commits'
+branding:
+  icon: 'tag'
+  color: 'blue'
+
+inputs:
+  version_prefix:
+    description: 'Prefix to use for version tags (e.g., "v")'
+    required: false
+    default: 'v'
+  
+  version_format:
+    description: 'Format for version numbers using {major}, {minor}, and {patch} placeholders'
+    required: false
+    default: '{major}.{minor}.{patch}'
+  
+  pre_release:
+    description: 'Pre-release identifier (e.g., "alpha.1")'
+    required: false
+    default: ''
+  
+  build_metadata:
+    description: 'Build metadata to append to version'
+    required: false
+    default: ''
+  
+  config_file:
+    description: 'Path to custom bumpit config file'
+    required: false
+    default: ''
+  
+  auto_push:
+    description: 'Whether to automatically push tags'
+    required: false
+    default: 'true'
+  
+  create_release:
+    description: 'Whether to create a GitHub release'
+    required: false
+    default: 'true'
+  
+  github_token:
+    description: 'GitHub token for creating releases'
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  version:
+    description: 'The new version number'
+    value: ${{ steps.get_tag.outputs.version }}
+  
+  tag:
+    description: 'The new version tag'
+    value: ${{ steps.get_tag.outputs.tag }}
+  
+  previous_version:
+    description: 'The previous version number'
+    value: ${{ steps.get_tag.outputs.previous_version }}
+  
+  is_initial_version:
+    description: 'Whether this is the first version'
+    value: ${{ steps.get_tag.outputs.is_initial_version }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.20'
+
+    - name: Install bumpit
+      shell: bash
+      run: go install github.com/crazywolf132/bumpit@latest
+
+    - name: Configure Git
+      shell: bash
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+    - name: Create config file
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.config_file }}" ] && [ -f "${{ inputs.config_file }}" ]; then
+          echo "Using provided config file: ${{ inputs.config_file }}"
+          cp "${{ inputs.config_file }}" .bumpit.yaml
+        else
+          cat > .bumpit.yaml << EOL
+          version_prefix: "${{ inputs.version_prefix }}"
+          version_format: "${{ inputs.version_format }}"
+          pre_release: "${{ inputs.pre_release }}"
+          build_metadata: "${{ inputs.build_metadata }}"
+          git:
+            auto_push: ${{ inputs.auto_push }}
+          commit_types:
+            major:
+              - "BREAKING CHANGE"
+              - "major"
+            minor:
+              - "feat"
+            patch:
+              - "fix"
+              - "chore"
+              - "docs"
+              - "style"
+              - "refactor"
+              - "perf"
+              - "test"
+          EOL
+        fi
+
+    - name: Get previous tag
+      id: previous_tag
+      shell: bash
+      run: |
+        PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        if [ -n "$PREV_TAG" ]; then
+          echo "previous_version=${PREV_TAG#v}" >> $GITHUB_OUTPUT
+          echo "is_initial_version=false" >> $GITHUB_OUTPUT
+        else
+          echo "previous_version=" >> $GITHUB_OUTPUT
+          echo "is_initial_version=true" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Run bumpit
+      shell: bash
+      run: bumpit
+
+    - name: Get new tag
+      id: get_tag
+      shell: bash
+      run: |
+        TAG=$(git describe --tags --abbrev=0)
+        echo "tag=$TAG" >> $GITHUB_OUTPUT
+        echo "version=${TAG#v}" >> $GITHUB_OUTPUT
+        echo "previous_version=${{ steps.previous_tag.outputs.previous_version }}" >> $GITHUB_OUTPUT
+        echo "is_initial_version=${{ steps.previous_tag.outputs.is_initial_version }}" >> $GITHUB_OUTPUT
+
+    - name: Create Release
+      if: ${{ inputs.create_release == 'true' }}
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.get_tag.outputs.tag }}
+        name: Release ${{ steps.get_tag.outputs.tag }}
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}

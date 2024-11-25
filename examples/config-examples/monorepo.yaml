@@ -1,0 +1,67 @@
+# Example configuration for monorepo versioning
+version_prefix: ""
+version_format: "{major}.{minor}.{patch}"
+
+# Default commit types
+commit_types:
+  major:
+    - "BREAKING CHANGE"
+    - "major"
+  minor:
+    - "feat"
+  patch:
+    - "fix"
+    - "chore"
+    - "style"
+    - "refactor"
+    - "perf"
+    - "test"
+
+# Git configuration
+git:
+  tag_pattern: "v*"
+  auto_push: true
+
+# Output configuration
+output:
+  debug: true
+  color: true
+
+# Path-specific configurations
+paths:
+  - path: "packages/core"
+    tag_pattern: "core/v*"
+    default_command: |
+      cd packages/core && \
+      npm version ${version} --no-git-tag-version && \
+      git add package.json && \
+      git commit -m "chore(core): bump version to ${version}" && \
+      git tag core/v${version}
+
+  - path: "packages/api"
+    tag_pattern: "api/v*"
+    default_command: |
+      cd packages/api && \
+      npm version ${version} --no-git-tag-version && \
+      git add package.json && \
+      git commit -m "chore(api): bump version to ${version}" && \
+      git tag api/v${version}
+
+  - path: "packages/web"
+    tag_pattern: "web/v*"
+    # Override commit types for web package
+    commit_types:
+      major:
+        - "BREAKING CHANGE"
+      minor:
+        - "feat"
+        - "ui"  # Special commit type for UI changes
+      patch:
+        - "fix"
+        - "style"
+    default_command: |
+      cd packages/web && \
+      npm version ${version} --no-git-tag-version && \
+      git add package.json && \
+      git commit -m "chore(web): bump version to ${version}" && \
+      git tag web/v${version}

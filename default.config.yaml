@@ -1,0 +1,40 @@
+# Default configuration for bumpit
+
+# Version prefix (e.g., 'v' for v1.0.0)
+version_prefix: "v"
+version_format: "{major}.{minor}.{patch}"
+pre_release: ""
+build_metadata: ""
+
+# Default command template if none provided
+default_command: "echo \"New version: {{.Version}}\""
+
+# Commit types that trigger version bumps
+commit_types:
+  major:
+    - "BREAKING CHANGE"
+    - "major"
+  minor:
+    - "feat"
+  patch:
+    - "fix"
+    - "chore"
+    - "docs"
+    - "style"
+    - "refactor"
+    - "perf"
+    - "test"
+
+# Git configuration
+git:
+  # Tag pattern to match when finding the last version
+  tag_pattern: ""
+  # Whether to automatically push tags
+  auto_push: false
+
+# Output configuration
+output:
+  # Whether to show debug information
+  debug: false
+  # Color output
+  color: true

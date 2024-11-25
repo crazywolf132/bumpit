@@ -1,0 +1,37 @@
+name: Version Packages
+on:
+  push:
+    branches: [main]
+
+jobs:
+  version:
+    strategy:
+      matrix:
+        package: [core, api, web]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set package name
+        run: echo "PKG_NAME=${{ matrix.package }}" >> $GITHUB_ENV
+
+      - name: Update version
+        uses: crazywolf132/bumpit@v1
+        with:
+          config_file: .bumpit.monorepo.yaml
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Build package
+        run: |
+          cd packages/${{ matrix.package }}
+          npm ci
+          npm run build
+          
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: ${{ matrix.package }} v${{ steps.version.outputs.version }}
+          tag_name: pkg/${{ matrix.package }}/v${{ steps.version.outputs.version }}
+          generate_release_notes: true

@@ -1,0 +1,92 @@
+name: Version
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  version:
+    name: Update Version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # Basic usage
+      - name: Update version
+        uses: crazywolf132/bumpit@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  version-custom:
+    name: Update Version (Custom)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # Advanced usage with custom settings
+      - name: Update version
+        uses: crazywolf132/bumpit@v1
+        with:
+          version_prefix: ''  # No prefix
+          version_format: '0.{major}.{minor}'  # Custom format
+          pre_release: 'beta.1'  # Add pre-release
+          build_metadata: ${{ github.sha }}  # Add build metadata
+          auto_push: true
+          create_release: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  version-config:
+    name: Update Version (Config File)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # Using a custom config file
+      - name: Update version
+        uses: crazywolf132/bumpit@v1
+        with:
+          config_file: '.bumpit.custom.yaml'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  version-outputs:
+    name: Use Version Outputs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # Using action outputs
+      - name: Update version
+        id: version
+        uses: crazywolf132/bumpit@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Use the outputs in subsequent steps
+      - name: Use version outputs
+        run: |
+          echo "New version: ${{ steps.version.outputs.version }}"
+          echo "New tag: ${{ steps.version.outputs.tag }}"
+          echo "Previous version: ${{ steps.version.outputs.previous_version }}"
+          echo "Is initial version: ${{ steps.version.outputs.is_initial_version }}"

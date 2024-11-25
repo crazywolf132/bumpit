@@ -1,0 +1,105 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+          cache: true
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Run tests
+        run: go test -v ./...
+
+      - name: Install bumpit
+        run: |
+          go install github.com/crazywolf132/bumpit@latest
+
+      - name: Configure Git
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Create .bumpit.yaml
+        run: |
+          cat > .bumpit.yaml << EOL
+          version_prefix: "v"
+          version_format: "{major}.{minor}.{patch}"
+          pre_release: ""
+          build_metadata: ""
+          git:
+            auto_push: true
+          commit_types:
+            major:
+              - "BREAKING CHANGE"
+              - "major"
+            minor:
+              - "feat"
+            patch:
+              - "fix"
+              - "chore"
+              - "docs"
+              - "style"
+              - "refactor"
+              - "perf"
+              - "test"
+          EOL
+
+      - name: Run bumpit
+        run: |
+          bumpit
+
+      - name: Get latest tag
+        id: get_tag
+        run: |
+          TAG=$(git describe --tags --abbrev=0)
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=${TAG#v}" >> $GITHUB_OUTPUT
+
+      - name: Build
+        run: |
+          GOOS=darwin GOARCH=amd64 go build -o bumpit-darwin-amd64 ./cmd/bumpit
+          GOOS=darwin GOARCH=arm64 go build -o bumpit-darwin-arm64 ./cmd/bumpit
+          GOOS=linux GOARCH=amd64 go build -o bumpit-linux-amd64 ./cmd/bumpit
+          GOOS=linux GOARCH=arm64 go build -o bumpit-linux-arm64 ./cmd/bumpit
+          GOOS=windows GOARCH=amd64 go build -o bumpit-windows-amd64.exe ./cmd/bumpit
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.get_tag.outputs.tag }}
+          name: Release ${{ steps.get_tag.outputs.tag }}
+          generate_release_notes: true
+          files: |
+            bumpit-darwin-amd64
+            bumpit-darwin-arm64
+            bumpit-linux-amd64
+            bumpit-linux-arm64
+            bumpit-windows-amd64.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push changes
+        run: |
+          git push origin main
+          git push --tags

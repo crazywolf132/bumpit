@@ -1,0 +1,34 @@
+name: Pre-release Version
+on:
+  push:
+    branches: [develop]
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Update version
+        id: version
+        uses: crazywolf132/bumpit@v1
+        with:
+          pre_release: "beta.${GITHUB_RUN_NUMBER}"
+          build_metadata: "${GITHUB_SHA}"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Create Pre-release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Beta v${{ steps.version.outputs.version }}
+          tag_name: ${{ steps.version.outputs.tag }}
+          prerelease: true
+          generate_release_notes: true
+          body: |
+            🚧 This is a pre-release version and may contain bugs.
+            
+            Version: ${{ steps.version.outputs.version }}
+            Build: ${{ github.sha }}
+            Branch: develop
